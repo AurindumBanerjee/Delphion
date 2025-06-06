@@ -76,10 +76,10 @@ Response:
 
 ## Status
 
-- Proof-of-concept Complete  
-- UI & Agent Orchestration in progress  
-- PDF ingestion and auto-indexing working  
-- Ready for Hackathon deployment on Nebius  
+- Proof-of-concept : Complete  
+- UI & Agent Orchestration : WIP  
+- PDF ingestion and auto-indexing : WIP  
+- Hackathon deployment on Nebius : Not yet  
 
 ## Project Name Meaning
 
