@@ -30,43 +30,6 @@ User Query
    └──▶ embedder_tool (document ingestion)  
 ```
 
-## Getting Started
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/yourusername/delphion.git
-cd delphion
-```
-
-### 2. Set Up Python Environment
-
-```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
-### 3. Run Retriever Agent
-
-```bash
-cd agents/retriever
-uvicorn main:app --host 0.0.0.0 --port 8001
-```
-
-### 4. Start the Gradio UI (optional)
-
-```bash
-cd frontend/gradio
-python app.py
-```
-
-### 5. Load Documents & Build Vector Index
-
-```bash
-python tools/embedder.py --input ./docs --output ./vector_store
-```
-
 ## Services Overview
 
 | Service         | Endpoint        | Description                          |
