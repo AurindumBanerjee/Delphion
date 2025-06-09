@@ -1,0 +1,15 @@
+gradio>=4.0.0
+loguru>=0.7.0
+python-dotenv>=1.0.0
+openai>=1.0.0
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.20
+langchain-experimental>=0.0.47
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+nltk>=3.8.1
+pymupdf>=1.23.0
+huggingface-hub>=0.20.3
+chromadb>=0.4.22
+html2text>=2020.1.16
