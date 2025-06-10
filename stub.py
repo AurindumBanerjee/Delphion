@@ -10,7 +10,8 @@ image = (
     .run_commands(
         "rm -rf Delphion",
         f"git clone {GITHUB_REPO}",
-        "pip install -r Delphion/requirements.txt"
+        "pip install uv",
+        "uv pip install --system -r Delphion/requirements.txt"
     )
 )
 
