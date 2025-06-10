@@ -1,3 +1,4 @@
+
 import os
 import uuid
 from fastapi import FastAPI, UploadFile, File, Form
@@ -38,8 +39,14 @@ async def embed(
             chunk_overlap=chunk_overlap
         )
 
-        ids = collection.get().get("ids") if collection else None
-        if not ids:
+        count = 0
+        try:
+            # Direct access to ChromaDB internal collection count
+            count = collection._collection.count()
+        except Exception:
+            pass
+
+        if count == 0:
             return {
                 "status": "embedding failed",
                 "chunks": 0,
@@ -48,7 +55,7 @@ async def embed(
 
         return {
             "status": "embedding complete",
-            "chunks": len(ids)
+            "chunks": count
         }
 
     except Exception as e:
