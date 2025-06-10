@@ -16,20 +16,18 @@ async def embed(
 
     for file in files:
         try:
-            # ✅ Clean base name + unique identifier
             clean_name = os.path.basename(file.filename)
             filename = f"{uuid.uuid4()}_{clean_name}"
-            file_path = f"{filename}"  # ✅ Safe absolute path
+            file_path = f"/tmp/{filename}"
 
             with open(file_path, "wb") as f:
                 f.write(await file.read())
 
             paths.append(file_path)
-
         except Exception as e:
             return {
                 "status": "error",
-                "message": f"Failed to save file {file.filename}: {str(e)}"
+                "message": f"Failed to save file {file.filename}: {e}"
             }
 
     try:
@@ -40,16 +38,21 @@ async def embed(
             chunk_overlap=chunk_overlap
         )
 
-        if collection is None:
-            return {"status": "embedding failed", "reason": "no chunks created"}
+        ids = collection.get().get("ids") if collection else None
+        if not ids:
+            return {
+                "status": "embedding failed",
+                "chunks": 0,
+                "reason": "no embeddings were stored"
+            }
 
         return {
             "status": "embedding complete",
-            "chunks": len(collection.get().get("ids", []))
+            "chunks": len(ids)
         }
 
     except Exception as e:
         return {
             "status": "error",
-            "message": f"Embedding failed: {str(e)}"
+            "message": f"Embedding failed: {e}"
         }
