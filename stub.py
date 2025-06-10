@@ -17,7 +17,7 @@ image = (
 @app.function(
     image=image,
     secrets=[modal.Secret.from_name("delphion-secret")],
-    timeout=300,
+    timeout= 60 * 60 * 24,      
 )
 
 @modal.concurrent(max_inputs = 100)
