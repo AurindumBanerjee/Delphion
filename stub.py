@@ -8,6 +8,7 @@ image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("git")
     .run_commands(
+        "rm -rf Delphion",
         f"git clone {GITHUB_REPO}",
         "pip install -r Delphion/requirements.txt"
     )
