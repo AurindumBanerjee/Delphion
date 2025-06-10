@@ -9,7 +9,7 @@ import os
 import fitz 
 from loguru import logger
 
-def load_documents(pdfs, chunking_method="hybrid", chunk_size=500, chunk_overlap=50):
+def load_documents(pdfs, chunking_method="semantic", chunk_size=500, chunk_overlap=50):
     '''
     Load documents from uploaded PDFs and create a vector store.
     
@@ -22,7 +22,7 @@ def load_documents(pdfs, chunking_method="hybrid", chunk_size=500, chunk_overlap
     Returns:
         A Chroma collection
     '''
-    
+
     if not pdfs:
         logger.warning("No PDFs provided")
         return None
