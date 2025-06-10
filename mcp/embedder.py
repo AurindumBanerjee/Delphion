@@ -19,7 +19,7 @@ async def embed(
             # ✅ Clean base name + unique identifier
             clean_name = os.path.basename(file.filename)
             filename = f"{uuid.uuid4()}_{clean_name}"
-            file_path = f"/tmp/{filename}"  # ✅ Safe absolute path
+            file_path = f"{filename}"  # ✅ Safe absolute path
 
             with open(file_path, "wb") as f:
                 f.write(await file.read())
