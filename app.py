@@ -2,7 +2,6 @@ import gradio as gr
 import requests
 import os
 
-# ✅ Replace this with your actual deployed Modal FastAPI base URL
 BASE_API = os.getenv("MCP_API", "https://b23cs1006--delphion-mcp-fastapi-app-dev.modal.run")
 
 EMBED_URL = f"{BASE_API}/embed/embed"
@@ -42,11 +41,9 @@ with gr.Blocks() as demo:
 
     with gr.Row():
         files = gr.Files(label="📎 Upload PDFs", file_types=[".pdf"])
-
         chunk_method = gr.Dropdown(choices=["recursive", "semantic"], value="recursive", label="Chunking Method")
         chunk_size = gr.Slider(minimum=100, maximum=2000, value=1000, step=100, label="Chunk Size")
         chunk_overlap = gr.Slider(minimum=0, maximum=500, value=200, step=50, label="Chunk Overlap")
-
         embed_output = gr.Textbox(label="Embedder Output", lines=2)
 
     gr.Button("Run Embedder", variant="primary").click(
@@ -59,12 +56,19 @@ with gr.Blocks() as demo:
         question = gr.Textbox(label="❓ Ask a Question")
         top_k = gr.Slider(minimum=1, maximum=20, value=4, step=1, label="Top-k Chunks")
         retriever_output = gr.Textbox(label="Retriever Output", lines=5)
-        
-    question.submit(ask_question, inputs=[question, top_k], outputs=retriever_output)
+    gr.Button("Run Retriever").click(
+        ask_question,
+        inputs=[question, top_k],
+        outputs=retriever_output
+    )
 
     with gr.Row():
         prompt = gr.Textbox(label="🧠 Prompt for Generator")
         generator_output = gr.Textbox(label="Generator Output", lines=5)
-    prompt.submit(generate_response, inputs=prompt, outputs=generator_output)
+    gr.Button("Run Generator").click(
+        generate_response,
+        inputs=prompt,
+        outputs=generator_output
+    )
 
-demo.launch(share = True)
+demo.launch(share=True)
