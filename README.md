@@ -1,3 +1,9 @@
+---
+title: Delphion
+app_file: ui.py
+sdk: gradio
+sdk_version: 5.33.0
+---
 # Delphion
 
 Delphion is a modular Retrieval-Augmented Generation (RAG) system based on the **Model Context Protocol (MCP)**. It integrates LLM-based agents (retriever, embedder, generator), document ingestion, vector search, and a testable Gradio UI.
