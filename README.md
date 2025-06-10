@@ -1,91 +1,128 @@
 # Delphion
 
-Delphion is a modular Retrieval-Augmented Generation (RAG) system designed for secure, high-performance knowledge retrieval and response generation. Inspired by the Oracle of Delphi, it leverages agent-based architecture using the Model Context Protocol (MCP), vector search, and GPU-accelerated compute from Nebius Cloud.
+Delphion is a modular Retrieval-Augmented Generation (RAG) system based on the **Model Context Protocol (MCP)**. It integrates LLM-based agents (retriever, embedder, generator), document ingestion, vector search, and a testable Gradio UI.
 
-## Key Features
+---
 
-- Model Context Protocol (MCP) Tool Integration  
-- Dynamic RAG with chunked document retrieval  
-- PDF/Text ingestion with embedding pipeline  
-- Modular FastAPI agents: Retriever, Generator, Memory  
-- Vector store via FAISS or ChromaDB  
-- Nebius Object Storage (S3-compatible) for documents  
-- Deployable on Nebius Compute or Modal  
-- Gradio-based demo UI or Next.js frontend  
+## 🚀 Deployment with Modal
 
-## Architecture Overview
+You can deploy the entire system on [Modal](https://modal.com/) using just:
 
-```
-User Query  
-   │  
-   ▼  
-[Frontend UI: Gradio / Next.js]  
-   │  
-   ▼  
-[LLM: Claude / GPT-4 w/ MCP Tool Calling]  
-   │  
-   ├──▶ retriever_tool (FastAPI on Nebius)  
-   │       └─ uses FAISS for semantic search  
-   ├──▶ generator_tool (optional response synthesis)  
-   └──▶ embedder_tool (document ingestion)  
+```bash
+modal serve stub.py
 ```
 
-## Services Overview
+This will:
 
-| Service         | Endpoint        | Description                          |
-|-----------------|-----------------|--------------------------------------|
-| retriever_tool  | /retriever      | Searches vector DB for relevant info |
-| generator_tool  | /generator      | Optional synthesis & summarization   |
-| embedder_tool   | /embed          | Embeds docs to build vector index    |
-| uploader_tool   | /upload         | Uploads docs to Nebius S3            |
+- Clone the Delphion GitHub repo into the Modal container
+- Install dependencies via `requirements.txt`
+- Start a FastAPI app exposing all three MCP tools:
+  - `POST /embed/embed` – document embedding
+  - `POST /retriever/retriever` – semantic search
+  - `POST /generate/generate` – prompt-based response generation
 
-## Tech Stack
+---
 
-- OpenAI / Claude (LLM)  
-- FastAPI (MCP tools)  
-- FAISS / ChromaDB (Vector store)  
-- Python (3.10+)  
-- Docker (for deployment)  
-- Nebius Compute & Object Storage  
-- Gradio / Streamlit (UI)  
+## 🛡️ Set Your API Key (securely)
 
-## Security & Deployment
+For production or Modal cloud deployment:
 
-- All agents are stateless, containerized via Docker  
-- Secure access via Nebius firewalls or NGINX proxy  
-- API Keys stored via dotenv / secrets manager  
+1. Store your OpenAI API key securely:
 
-## Examples
-
-Example input to the retriever_tool via HTTP:
-
-```json
-POST /retriever
-{
-  "input": "What is the Mamba architecture?"
-}
+```bash
+modal secret create delphion-secrets OPENAI_API_KEY= "Insert your key here"
 ```
 
-Response:
+2. `stub.py` will automatically read it using:
 
-```json
-{
-  "output": "The Mamba architecture is a selective state-space model for long-context reasoning..."
-}
+```python
+os.environ["OPENAI_API_KEY"]
 ```
 
-## Status
+For local development, use a `.env` file in the root:
 
-- Proof-of-concept : Complete  
-- UI & Agent Orchestration : WIP  
-- PDF ingestion and auto-indexing : WIP  
-- Hackathon deployment on Nebius : Not yet  
+```env
+OPENAI_API_KEY=sk-...
+```
 
-## Project Name Meaning
+---
 
-Delphion is inspired by the Oracle of Delphi—where knowledge and prophecy met. Just like the ancient priestesses channeled insight from the divine, Delphion channels knowledge from structured memory via smart agents and LLMs.
+## 🧪 Testing with Gradio UI
 
-## License
+You can run the UI client locally to test all 3 agents:
 
-MIT License. Use freely with attribution.
-****
+1. Edit the base URL in `test.py`:
+
+```python
+BASE_API = "http://localhost:8000"  # or your deployed URL
+```
+
+2. Run:
+
+```bash
+python test.py
+```
+
+3. The UI lets you:
+- 📎 Upload PDFs to `/embed/embed`
+- ❓ Ask questions to `/retriever/retriever`
+- 🧠 Send prompts to `/generate/generate`
+
+---
+
+## 🧠 Architecture Overview
+
+```text
+User Query
+   │
+   ▼
+Gradio UI / API Client
+   │
+   ▼
+[Modal Deployed FastAPI]
+   ├──▶ /embed/embed      → vector index via FAISS/Chroma
+   ├──▶ /retriever/retriever → semantic search
+   └──▶ /generate/generate → LLM generation via OpenAI
+```
+
+---
+
+## 🧱 Technologies Used
+
+- 🧠 OpenAI (LLMs + embeddings)
+- 🦜 LangChain + ChromaDB (vectorstore)
+- 🧬 FastAPI (agent APIs)
+- 🖼️ Gradio (testing UI)
+- 🧊 Modal (GPU / cloud backend)
+- 📄 PDF ingestion with PyMuPDF
+
+---
+
+## 🧰 Run Locally (Advanced Dev Only)
+
+You can also run the services individually:
+
+```bash
+# Embedder
+uvicorn mcp.embedder:app --port 8001
+
+# Retriever
+uvicorn mcp.retriever:app --port 8002
+
+# Generator
+uvicorn mcp.generator:app --port 8003
+```
+
+Then adjust the `test.py` URLs accordingly.
+
+---
+
+## 📜 License
+
+MIT License. Attribution required for public use or distribution.
+
+---
+
+## 📣 Credits
+
+Delphion is inspired by the Oracle of Delphi — designed to extract structured knowledge from unstructured documents via LLM agents.
