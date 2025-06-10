@@ -3,6 +3,7 @@ loguru>=0.7.0
 python-dotenv>=1.0.0
 openai>=1.0.0
 langchain>=0.1.0
+langchain-chroma>=0.1.0  # ✅ new package needed
 langchain-openai>=0.0.5
 langchain-community>=0.0.20
 langchain-experimental>=0.0.47
@@ -15,4 +16,4 @@ chromadb>=0.4.22
 html2text>=2020.1.16
 fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
-modal==1.1.4
+modal
