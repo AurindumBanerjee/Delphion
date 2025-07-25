@@ -1,19 +1,33 @@
+# === Web UI & Deployment ===
 gradio>=4.0.0
-loguru>=0.7.0
-python-dotenv>=1.0.0
-openai>=1.0.0
-langchain>=0.1.0
-langchain-chroma>=0.1.0  # ✅ new package needed
-langchain-openai>=0.0.5
-langchain-community>=0.0.20
-langchain-experimental>=0.0.47
-chromadb>=0.4.22
-sentence-transformers>=2.2.2
-nltk>=3.8.1
-pymupdf>=1.23.0
-huggingface-hub>=0.20.3
-chromadb>=0.4.22
-html2text>=2020.1.16
 fastapi>=0.100.0
 uvicorn[standard]>=0.22.0
 modal
+
+# === Logging & Environment ===
+loguru>=0.7.0
+python-dotenv>=1.0.0
+
+# === PDF & HTML Parsing ===
+pymupdf>=1.23.0
+html2text>=2020.1.16
+
+# === NLP Utilities ===
+nltk>=3.8.1
+tqdm>=4.66.0
+
+# === Vector Database ===
+chromadb>=0.4.22
+langchain-chroma>=0.1.0  # if you're still using LangChain’s Chroma wrapper
+langchain-community>=0.0.20
+langchain>=0.1.0
+langchain-experimental>=0.0.47
+
+# === Embeddings ===
+sentence-transformers>=2.2.2
+huggingface-hub>=0.20.3
+
+# === LLM Inference ===
+transformers>=4.41.0
+accelerate>=0.28.0
+torch>=2.2.0
