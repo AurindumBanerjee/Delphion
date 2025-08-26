@@ -8,7 +8,7 @@ image = (
     modal.Image.debian_slim(python_version="3.10")
     .apt_install("git")
     .run_commands(
-        f"echo rebuild-trigger-{modal.__version__}",  # 👈 forces rebuild
+        f"echo rebuild-trigger-{modal.__version__}", 
         "rm -rf Delphion",
         f"git clone {GITHUB_REPO}",
         "pip install uv",
@@ -32,7 +32,6 @@ def fastapi_app():
     import os
     from fastapi import FastAPI
 
-    # ✅ Modal will auto-inject OPENAI_API_KEY into os.environ
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY not found. Make sure modal secret is set.")
