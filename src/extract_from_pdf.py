@@ -1,110 +1,62 @@
-from langchain_community.document_loaders import PyMuPDFLoader
-from langchain_community.document_loaders import DirectoryLoader 
-from langchain_community.document_loaders import TextLoader
-from src.chunking.chunking_factory import ChunkingFactory
-from src.vectorstore import create_vectorstore
-import tqdm
-import uuid
+"""PDF -> page Documents -> chunks, with citation metadata attached."""
+
 import os
-import fitz 
+from typing import List
+
+import fitz  # PyMuPDF
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_core.documents import Document
 from loguru import logger
 
-def load_documents(pdfs, chunking_method="semantic", chunk_size=500, chunk_overlap=50):
-    '''
-    Load documents from uploaded PDFs and create a vector store.
-    
-    Args:
-        pdfs: List of PDF files
-        chunking_method: The chunking method to use (default: "hybrid")
-        chunk_size: Size of chunks (default: 500)
-        chunk_overlap: Overlap between chunks (default: 50)
-        
-    Returns:
-        A Chroma collection
-    '''
+from src.chunking.chunking_factory import ChunkingFactory
 
-    if not pdfs:
+
+def load_and_chunk(
+    pdf_paths: List[str],
+    chunking_method: str = "recursive",
+    chunk_size: int = 1000,
+    chunk_overlap: int = 200,
+) -> List[Document]:
+    """Return chunks whose metadata carries source/page/title, so answers can cite."""
+    if not pdf_paths:
         logger.warning("No PDFs provided")
-        return None
-        
-    all_chunks = []
-    all_metadatas = []
-    logger.info(f"fitz version: {fitz.__version__}")
-    logger.info(f"PyMuPDF version: {fitz.__doc__}")
-    
-    # Get the chunking function from the factory
+        return []
+
     chunker = ChunkingFactory.create_chunker(
-        method=chunking_method, 
-        chunk_size=chunk_size, 
-        chunk_overlap=chunk_overlap
+        method=chunking_method,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
     )
-    
-    for pdf_path in pdfs:
-        logger.info(f"Processing PDF: {pdf_path}")
-        # 1. Load with PyMuPDF
+
+    all_chunks: List[Document] = []
+
+    for pdf_path in pdf_paths:
         try:
-            loader = PyMuPDFLoader(pdf_path)
-            documents = loader.load()
-            
-            # 2. Extract native metadata
-            doc = fitz.open(pdf_path)
-            base_metadata = {
+            pages = PyMuPDFLoader(pdf_path).load()
+
+            with fitz.open(pdf_path) as doc:
+                raw = doc.metadata or {}
+            base = {
                 "source": os.path.basename(pdf_path),
-                "author": doc.metadata.get("author"),
-                "title": doc.metadata.get("title"),
-                "creation_date": doc.metadata.get("creationDate"),
-                "chunking_method": chunking_method
+                "title": raw.get("title") or "",
+                "author": raw.get("author") or "",
+                "chunking_method": chunking_method,
             }
-            
-            # 3. Process each page
-            page_metadatas = []
-            for i, page_doc in enumerate(documents):
-                page_metadata = {
-                    **base_metadata,
-                    "page": i+1,
-                    "section": page_doc.metadata.get("section", "")
-                }
-                page_metadatas.append(page_metadata)
-            
-            # 4. Chunk documents using the selected method
-            chunks = chunker(documents)
-            
-            # Ensure chunks and metadata align
-            for i, chunk in enumerate(chunks):
-                # Find the corresponding page metadata
-                page_num = chunk.metadata.get("page", 1)
-                # Use page number to find the right metadata (adjust for 0-indexing if needed)
-                chunk_metadata = next(
-                    (meta for meta in page_metadatas if meta["page"] == page_num), 
-                    page_metadatas[0] if page_metadatas else {"source": os.path.basename(pdf_path)}
-                )
-                all_chunks.append(chunk)
-                all_metadatas.append(chunk_metadata)
-            
-        except Exception as e:
-            logger.error(f"Error processing PDF {pdf_path}: {e}")
-    
-    if not all_chunks:
-        logger.warning("No chunks were created from the documents")
-        return None
-    
-    # 5. Generate unique IDs
-    ids = [str(uuid.uuid4()) for _ in all_chunks]
-    
-    logger.info(f"Created {len(all_chunks)} chunks from {len(pdfs)} documents using {chunking_method} chunking")
-    
-    # 6. Create vector store
-    try:
-        # Extract text from Documents
-        texts = [doc.page_content for doc in all_chunks]
-        # Extract metadata
-        metadatas = [doc.metadata for doc in all_chunks]
-        
-        # Create the vector store
-        collection = create_vectorstore(texts, metadatas, ids)
-        logger.info(f"Successfully created vector store with {len(texts)} chunks")
-        return collection
-        
-    except Exception as e:
-        logger.error(f"Error creating vector store: {e}")
-        return None
+
+            chunks = chunker(pages)
+
+            # Carry document-level metadata onto every chunk. PyMuPDFLoader
+            # already sets a 0-indexed "page"; normalise it to 1-indexed.
+            for chunk in chunks:
+                page_no = chunk.metadata.get("page")
+                chunk.metadata.update(base)
+                chunk.metadata["page"] = (page_no + 1) if isinstance(page_no, int) else 1
+
+            all_chunks.extend(chunks)
+            logger.info(f"{base['source']}: {len(pages)} pages -> {len(chunks)} chunks")
+
+        except Exception as exc:
+            logger.error(f"Error processing {pdf_path}: {exc}")
+
+    logger.info(f"Total {len(all_chunks)} chunks from {len(pdf_paths)} file(s)")
+    return all_chunks
