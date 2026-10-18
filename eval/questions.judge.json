@@ -1,0 +1,86 @@
+[
+  {
+    "question": "What do the authors say renewed exchange between brain science and AI will help achieve?",
+    "answer_span": "help pave the way towards safe and interpretable human-centered AI",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 2
+  },
+  {
+    "question": "In the predictive coding network figure, what do the feedback and feedforward connections carry?",
+    "answer_span": "feedback connections carrying predictions of lower-level activity",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 5
+  },
+  {
+    "question": "Which simple puzzle tasks do LLMs reportedly fail on despite humans solving them easily?",
+    "answer_span": "Tower of Hanoi",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 8
+  },
+  {
+    "question": "Could transformers already have compositional structure from stacking attention blocks?",
+    "answer_span": "stacking of self-attention blocks",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 12
+  },
+  {
+    "question": "What brain-inspired offline phase is proposed for continual updating of foundation models?",
+    "answer_span": "offline “sleep” phase",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 15
+  },
+  {
+    "question": "How do people commonly think about memory?",
+    "answer_span": "keeping records of the past",
+    "source": "The Society of Mind.pdf",
+    "page": 31
+  },
+  {
+    "question": "What do your agencies do with their little theories about the world?",
+    "answer_span": "make you do small experiments to confirm or reformulate",
+    "source": "The Society of Mind.pdf",
+    "page": 54
+  },
+  {
+    "question": "Why are very general problem-solving methods of limited use?",
+    "answer_span": "they do not apply especially well to any particular problem",
+    "source": "The Society of Mind.pdf",
+    "page": 141
+  },
+  {
+    "question": "What must one be able to do in order to sense what persists through time?",
+    "answer_span": "compare descriptions from the recent past",
+    "source": "The Society of Mind.pdf",
+    "page": 253
+  },
+  {
+    "question": "How does the structure of the book reflect its view of mind?",
+    "answer_span": "each page explores a theory or idea that exploits what other pages do",
+    "source": "The Society of Mind.pdf",
+    "page": 318
+  },
+  {
+    "question": "Which symptom describes involuntary urination where the patient could not reach the vessel in time?",
+    "answer_span": "she could not get to the utensil",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 158
+  },
+  {
+    "question": "What symptom involves loss of vision with dilated immovable pupils?",
+    "answer_span": "enormously dilated and quite immovable pupils",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 230
+  },
+  {
+    "question": "Which symptom describes a woman sitting rigidly on a chair like a statue?",
+    "answer_span": "sits stiffly on a chair like a statue",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 416
+  },
+  {
+    "question": "How does the urine change in appearance, ending with a sticky sediment?",
+    "answer_span": "with white sticky sediment",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 608
+  }
+]

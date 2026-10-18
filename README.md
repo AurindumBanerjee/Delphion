@@ -83,7 +83,36 @@ the PDF (`eval/questions.json`).
 Run it yourself: `run_benchmark.bat` (Windows) or `python eval/run_eval.py`.
 
 <!-- BENCHMARK:START -->
-_Pending first run — `run_benchmark.bat` fills this in automatically._
+42 questions · embeddings `BAAI/bge-small-en-v1.5` (local) · ground truth is a verbatim span, so it survives re-chunking.
+
+| Chunking | Retrieval | Chunks | hit@1 | hit@3 | hit@5 | hit@10 | MRR@5 | nDCG@5 | p50 query |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `recursive` @ 1000 | hybrid_rerank | 3647 | 0.88 | 0.98 | 0.98 | 0.98 | 0.92 | 0.93 | 1366 ms |
+| `recursive` @ 500 | hybrid_rerank | 9100 | 0.86 | 0.93 | 0.93 | 0.95 | 0.89 | 0.90 | 1255 ms |
+| `recursive` @ 2000 | hybrid_rerank | 2105 | 0.81 | 0.90 | 0.93 | 0.98 | 0.86 | 0.88 | 1748 ms |
+| `recursive` @ 1000 | bm25 | 3647 | 0.79 | 0.93 | 0.93 | 0.98 | 0.85 | 0.87 | 14 ms |
+| `recursive` @ 2000 | bm25 | 2105 | 0.79 | 0.90 | 0.90 | 0.90 | 0.84 | 0.86 | 7 ms |
+| `recursive` @ 500 | bm25 | 9100 | 0.69 | 0.90 | 0.93 | 0.93 | 0.79 | 0.83 | 29 ms |
+| `recursive` @ 500 | hybrid | 9100 | 0.71 | 0.83 | 0.88 | 0.95 | 0.79 | 0.81 | 46 ms |
+| `recursive` @ 1000 | hybrid | 3647 | 0.67 | 0.81 | 0.90 | 0.90 | 0.75 | 0.79 | 27 ms |
+| `recursive` @ 500 | dense | 9100 | 0.60 | 0.79 | 0.83 | 0.90 | 0.69 | 0.72 | 12 ms |
+| `recursive` @ 2000 | hybrid | 2105 | 0.55 | 0.79 | 0.88 | 0.98 | 0.67 | 0.72 | 18 ms |
+| `recursive` @ 1000 | dense | 3647 | 0.45 | 0.74 | 0.76 | 0.86 | 0.58 | 0.63 | 10 ms |
+| `recursive` @ 2000 | dense | 2105 | 0.31 | 0.57 | 0.69 | 0.71 | 0.45 | 0.51 | 10 ms |
+
+### Before (dense) → after (hybrid_rerank)
+
+| Chunking | hit@1 | hit@5 | MRR@5 |
+|---|---|---|---|
+| `recursive` @ 500 | 0.60 → **0.86** (+0.26) | 0.83 → **0.93** (+0.10) | 0.69 → **0.89** (+0.20) |
+| `recursive` @ 1000 | 0.45 → **0.88** (+0.43) | 0.76 → **0.98** (+0.21) | 0.58 → **0.92** (+0.34) |
+| `recursive` @ 2000 | 0.31 → **0.81** (+0.50) | 0.69 → **0.93** (+0.24) | 0.45 → **0.86** (+0.42) |
+
+**Best:** `recursive` @ 1000 with hybrid_rerank — hit@5 0.98, MRR@5 0.92.
+
+**Still missed in top 10 (1):**
+
+- What analogy about iron does Hahnemann use to describe medicines being used to harm or help?
 <!-- BENCHMARK:END -->
 
 **Caveat on the question set.** Questions were written from sampled passages
