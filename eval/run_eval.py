@@ -202,13 +202,13 @@ def main():
     (RESULTS / "latest.md").write_text(report, encoding="utf-8")
 
     readme = ROOT / "README.md"
-    text = readme.read_text(encoding="utf-8")
+    text = readme.read_bytes().decode("utf-8").replace("\r\n", "\n")
     start, end = "<!-- BENCHMARK:START -->", "<!-- BENCHMARK:END -->"
     if start in text and end in text:
         body = report.replace("## Retrieval benchmark\n\n", "", 1)
         head, rest = text.split(start, 1)
         readme.write_text(head + start + "\n" + body + end + rest.split(end, 1)[1],
-                          encoding="utf-8")
+                          encoding="utf-8", newline="\n")
         print("README.md results section updated.")
 
     print("\n" + report)
