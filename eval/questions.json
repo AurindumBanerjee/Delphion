@@ -1,0 +1,254 @@
+[
+  {
+    "question": "What do the authors say renewed exchange between brain science and AI will help achieve?",
+    "answer_span": "help pave the way towards safe and interpretable human-centered AI",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 2
+  },
+  {
+    "question": "How does variational inference differ from MAP estimation in predictive coding?",
+    "answer_span": "find the full posterior distribution instead of a point esti",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 4
+  },
+  {
+    "question": "How are the two sources of information weighted in predictive coding?",
+    "answer_span": "weighted according to their reliability",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 4
+  },
+  {
+    "question": "In the predictive coding network figure, what do the feedback and feedforward connections carry?",
+    "answer_span": "feedback connections carrying predictions of lower-level activity",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 5
+  },
+  {
+    "question": "What are prediction errors used for during inference?",
+    "answer_span": "used during inference to correct the state estimates",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 5
+  },
+  {
+    "question": "What issues are listed with the scaling-only approach to large networks?",
+    "answer_span": "lack of easy interpretability of the network",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 6
+  },
+  {
+    "question": "Which simple puzzle tasks do LLMs reportedly fail on despite humans solving them easily?",
+    "answer_span": "Tower of Hanoi",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 8
+  },
+  {
+    "question": "Why does modifying the generative model with RLHF conflict with learning a generative model?",
+    "answer_span": "no longer faithful to its training data distribution",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 8
+  },
+  {
+    "question": "How can a handwritten digit 8 be decomposed hierarchically?",
+    "answer_span": "divided into parts (loops and curves at the middle level)",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 10
+  },
+  {
+    "question": "Could transformers already have compositional structure from stacking attention blocks?",
+    "answer_span": "stacking of self-attention blocks",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 12
+  },
+  {
+    "question": "What would integrating LLMs with APC components at each level enable?",
+    "answer_span": "encode and decode structured interpretable representations",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 13
+  },
+  {
+    "question": "Beyond retrieval as in RAG, what memory ability should foundation models gain?",
+    "answer_span": "also write salient information or episodes to the memory",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 14
+  },
+  {
+    "question": "What brain-inspired offline phase is proposed for continual updating of foundation models?",
+    "answer_span": "offline “sleep” phase",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 15
+  },
+  {
+    "question": "What is said to complement the missing sense of agency in current AI?",
+    "answer_span": "lack of explicit closed-loop control and interpretability",
+    "source": "Lessons from Neuroscience for AI.pdf",
+    "page": 15
+  },
+  {
+    "question": "How can one explain why chain links cannot come apart?",
+    "answer_span": "each would get in its neighbors’ way",
+    "source": "The Society of Mind.pdf",
+    "page": 23
+  },
+  {
+    "question": "How do people commonly think about memory?",
+    "answer_span": "keeping records of the past",
+    "source": "The Society of Mind.pdf",
+    "page": 31
+  },
+  {
+    "question": "What does the chapter on the Self say about pretending?",
+    "answer_span": "We are what we pretend to be",
+    "source": "The Society of Mind.pdf",
+    "page": 34
+  },
+  {
+    "question": "What strategy do fashion, style and art often share?",
+    "answer_span": "using forms that lie beneath the surface of our thoughts",
+    "source": "The Society of Mind.pdf",
+    "page": 48
+  },
+  {
+    "question": "What do your agencies do with their little theories about the world?",
+    "answer_span": "make you do small experiments to confirm or reformulate",
+    "source": "The Society of Mind.pdf",
+    "page": 54
+  },
+  {
+    "question": "What temporal confusion can occur when recalling two events on different days?",
+    "answer_span": "unable to determine which of those days came earlier",
+    "source": "The Society of Mind.pdf",
+    "page": 58
+  },
+  {
+    "question": "What concept might we say children are learning in the conservation experiments?",
+    "answer_span": "the concept of quantity",
+    "source": "The Society of Mind.pdf",
+    "page": 101
+  },
+  {
+    "question": "Why are very general problem-solving methods of limited use?",
+    "answer_span": "they do not apply especially well to any particular problem",
+    "source": "The Society of Mind.pdf",
+    "page": 141
+  },
+  {
+    "question": "Would it be better for specialists to share a single memory?",
+    "answer_span": "share a common, general-purpose memory",
+    "source": "The Society of Mind.pdf",
+    "page": 164
+  },
+  {
+    "question": "How is culture defined in terms of what communities accumulate?",
+    "answer_span": "the conceptual treasures our communities accumulate through history",
+    "source": "The Society of Mind.pdf",
+    "page": 232
+  },
+  {
+    "question": "What must one be able to do in order to sense what persists through time?",
+    "answer_span": "compare descriptions from the recent past",
+    "source": "The Society of Mind.pdf",
+    "page": 253
+  },
+  {
+    "question": "What happens to our sense of a boat's identity after all its planks are replaced?",
+    "answer_span": "we’re not so sure of its identity",
+    "source": "The Society of Mind.pdf",
+    "page": 285
+  },
+  {
+    "question": "How are agents arranged into a 64-agent supercube?",
+    "answer_span": "8 such cubes make a 64-agent supercube",
+    "source": "The Society of Mind.pdf",
+    "page": 311
+  },
+  {
+    "question": "How does the structure of the book reflect its view of mind?",
+    "answer_span": "each page explores a theory or idea that exploits what other pages do",
+    "source": "The Society of Mind.pdf",
+    "page": 318
+  },
+  {
+    "question": "What analogy about iron does Hahnemann use to describe medicines being used to harm or help?",
+    "answer_span": "the murderous dagger or the gentle ploughshare",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 131
+  },
+  {
+    "question": "Which symptom describes eyelid borders feeling dry and rubbing on the eyeballs?",
+    "answer_span": "as if they were dry, and rubbed upon the eyeballs",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 143
+  },
+  {
+    "question": "Which symptom describes involuntary urination where the patient could not reach the vessel in time?",
+    "answer_span": "she could not get to the utensil",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 158
+  },
+  {
+    "question": "When does the patient have great thirst due to throat dryness that stops by morning?",
+    "answer_span": "Only at night much thirst",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 174
+  },
+  {
+    "question": "Why, according to the author, were medicines not created in large quantities?",
+    "answer_span": "inflict injury on the noble human race",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 185
+  },
+  {
+    "question": "What symptom involves loss of vision with dilated immovable pupils?",
+    "answer_span": "enormously dilated and quite immovable pupils",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 230
+  },
+  {
+    "question": "Which vertigo symptom involves everything seeming to whirl in a circle?",
+    "answer_span": "he felt as if all whirled round him in a circle",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 281
+  },
+  {
+    "question": "Which headache is like a hysterical migraine, worse on raising the eyes?",
+    "answer_span": "like a hysterical me",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 353
+  },
+  {
+    "question": "Which symptom describes a woman sitting rigidly on a chair like a statue?",
+    "answer_span": "sits stiffly on a chair like a statue",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 416
+  },
+  {
+    "question": "What happens in the ears when she blows her nose?",
+    "answer_span": "she feels a dart in the ears",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 546
+  },
+  {
+    "question": "Which symptom describes small facial pimples that form a pustule and dry up?",
+    "answer_span": "in the centre of which a pustule is formed",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 591
+  },
+  {
+    "question": "How does the urine change in appearance, ending with a sticky sediment?",
+    "answer_span": "with white sticky sediment",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 608
+  },
+  {
+    "question": "Which hip-joint pain is worst in bed in the evening and forces him to walk about?",
+    "answer_span": "compelling him to get up and walk about",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 633
+  },
+  {
+    "question": "Why is the medicine regarded as a polychrest?",
+    "answer_span": "created for great usefulness",
+    "source": "Materia Medica Samuel Hahnemann.pdf",
+    "page": 692
+  }
+]

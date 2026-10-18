@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delphion v2 — Modal Service Split</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#1a1815; --muted:#6b665e;
+    --line:#e3ded6; --accent:#7c5cff; --accent-soft:#f0ecff;
+    --warn:#b4530a; --warn-soft:#fdf1e5; --ok:#2f6f4f; --ok-soft:#e9f4ee;
+    --code-bg:#f5f2ee;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#14130f; --panel:#1c1a16; --ink:#ece7de; --muted:#9c958a;
+      --line:#2e2b25; --accent:#a996ff; --accent-soft:#241f3d;
+      --warn:#e39355; --warn-soft:#2c1f14; --ok:#7fc4a1; --ok-soft:#15251d;
+      --code-bg:#211e19;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 ui-serif,Georgia,"Iowan Old Style",serif;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 96px}
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line);margin-bottom:48px}
+  .tag{display:inline-block;font:600 11px/1 ui-sans-serif,system-ui,sans-serif;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:100px;padding:6px 12px;margin-bottom:20px}
+  h1{font-size:44px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}
+  .sub{font-size:19px;color:var(--muted);margin:0;max-width:60ch}
+  h2{font-size:27px;margin:56px 0 8px;letter-spacing:-.01em;
+    padding-top:24px;border-top:1px solid var(--line)}
+  h3{font:600 15px/1.4 ui-sans-serif,system-ui,sans-serif;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--muted);margin:36px 0 10px}
+  h4{font-size:19px;margin:32px 0 6px}
+  p{margin:14px 0}
+  code{font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:var(--code-bg);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;overflow-x:auto;margin:18px 0}
+  pre code{background:none;padding:0;font-size:13px;line-height:1.6}
+  .cm{color:var(--muted)}
+  .hl{background:var(--warn-soft);border-radius:3px;padding:1px 3px}
+  table{width:100%;border-collapse:collapse;margin:20px 0;
+    font:14.5px/1.5 ui-sans-serif,system-ui,sans-serif}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);
+    vertical-align:top}
+  th{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted)}
+  td code{font-size:12.5px}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .bug{border-left:3px solid var(--warn);background:var(--warn-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .good{border-left:3px solid var(--ok);background:var(--ok-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .note strong,.bug strong,.good strong{
+    font:600 11px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.1em;
+    text-transform:uppercase;display:block;margin-bottom:6px}
+  .note strong{color:var(--accent)} .bug strong{color:var(--warn)} .good strong{color:var(--ok)}
+  figure{margin:32px 0;padding:24px;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+  figcaption{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;color:var(--muted);
+    margin-top:16px;text-align:center}
+  svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  .s-box{fill:var(--panel);stroke:var(--line)}
+  .s-hot{fill:var(--warn-soft);stroke:var(--warn)}
+  .s-state{fill:var(--accent-soft);stroke:var(--accent)}
+  .s-t{fill:var(--ink);font:13px ui-sans-serif,system-ui,sans-serif}
+  .s-m{fill:var(--muted);font:11px ui-sans-serif,system-ui,sans-serif}
+  .s-l{stroke:var(--muted);fill:none;stroke-width:1.5}
+  ol,ul{padding-left:22px} li{margin:7px 0}
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    font:14px/1.6 ui-sans-serif,system-ui,sans-serif;color:var(--muted)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="tag">Archived · Version 2</div>
+  <h1>The Modal Service Split</h1>
+  <p class="sub">Three FastAPI applications — embedder, retriever, generator —
+  mounted under one ASGI app and deployed to Modal. The decomposition was
+  right. Putting a database inside disposable compute was not.</p>
+</header>
+
+<div class="note">
+  <strong>Naming</strong>
+  The <code>mcp/</code> folder predates and has nothing to do with the Model
+  Context Protocol — it stood for “micro-service components”. The name is a
+  real hazard: <code>mcp</code> is now a package on PyPI, and
+  <code>from mcp.embedder import app</code> would collide with it. Renaming was
+  on the list when this version was retired.
+</div>
+
+<h2>The shape of it</h2>
+
+<p>A Gradio page running locally made three HTTP calls to a Modal deployment.
+Inside that deployment, one <code>FastAPI()</code> instance mounted three
+sub-applications, each owning one stage of the pipeline. Modal built the
+container image by cloning the repository from GitHub at build time, injected
+the OpenAI key from a secret, and autoscaled containers under load.</p>
+
+<figure>
+<svg viewBox="0 0 760 520" role="img" aria-label="Architecture of version 2">
+  <rect x="230" y="8" width="300" height="52" rx="9" class="s-box"/>
+  <text x="248" y="32" class="s-t">app.py / test.py — Gradio client</text>
+  <text x="248" y="49" class="s-m">requests.post() to three hardcoded URLs</text>
+
+  <path d="M380 60 L380 92" class="s-l" marker-end="url(#a)"/>
+  <text x="392" y="82" class="s-m">HTTPS</text>
+
+  <rect x="20" y="92" width="720" height="410" rx="14" class="s-box" stroke-dasharray="5 4"/>
+  <text x="38" y="116" class="s-m">Modal — b23cs1006--delphion-mcp-fastapi-app-dev.modal.run</text>
+
+  <rect x="44" y="132" width="672" height="88" rx="10" class="s-box"/>
+  <text x="62" y="154" class="s-t">stub.py — @modal.asgi_app()</text>
+  <text x="62" y="175" class="s-m">api.mount("/embed", embedder_app)      → POST /embed/embed</text>
+  <text x="62" y="192" class="s-m">api.mount("/retriever", retriever_app) → POST /retriever/retriever</text>
+  <text x="62" y="209" class="s-m">api.mount("/generate", generator_app)  → POST /generate/embed  ← never /generate</text>
+
+  <text x="44" y="248" class="s-m">@modal.concurrent(max_inputs=100) — Modal autoscales containers</text>
+
+  <!-- container A -->
+  <rect x="60" y="264" width="290" height="180" rx="10" class="s-box"/>
+  <text x="78" y="288" class="s-t">container A</text>
+  <rect x="78" y="302" width="254" height="34" rx="7" class="s-box"/>
+  <text x="92" y="324" class="s-m">embedder → load_documents()</text>
+  <path d="M205 336 L205 358" class="s-l" marker-end="url(#a)"/>
+  <rect x="78" y="358" width="254" height="66" rx="7" class="s-state"/>
+  <text x="92" y="382" class="s-t">./chroma_db</text>
+  <text x="92" y="402" class="s-m">populated — 412 chunks</text>
+  <text x="92" y="417" class="s-m">container-local disk</text>
+
+  <!-- container B -->
+  <rect x="410" y="264" width="290" height="180" rx="10" class="s-hot"/>
+  <text x="428" y="288" class="s-t">container B</text>
+  <rect x="428" y="302" width="254" height="34" rx="7" class="s-box"/>
+  <text x="442" y="324" class="s-m">retriever → similarity_search()</text>
+  <path d="M555 336 L555 358" class="s-l" marker-end="url(#a)"/>
+  <rect x="428" y="358" width="254" height="66" rx="7" class="s-box"/>
+  <text x="442" y="382" class="s-t">./chroma_db</text>
+  <text x="442" y="402" class="s-m">EMPTY — never saw the upload</text>
+  <text x="442" y="417" class="s-m">bound at import time, line 6</text>
+
+  <path d="M350 390 L 410 390" class="s-l" stroke-dasharray="4 4"/>
+  <text x="352" y="472" class="s-m">no shared storage — the two indexes never meet</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+      markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption>The two containers are the entire story of this version.
+Everything else worked.</figcaption>
+</figure>
+
+<h2>The failure, precisely</h2>
+
+<p>Chroma persisted to <code>./chroma_db</code> — a path on the local filesystem
+of whichever container happened to serve the request. Modal was configured with
+<code>@modal.concurrent(max_inputs=100)</code> and autoscaled freely, and
+containers are reclaimed when idle.</p>
+
+<p>So an upload built an index in container A, and the next question routed to
+container B, which had an empty folder and returned nothing. Nothing in the
+application code was wrong. The architecture guaranteed the failure.</p>
+
+<div class="bug">
+  <strong>Compounded at retriever.py line 6</strong>
+  <pre style="margin:10px 0 0"><code>app = FastAPI()
+collection = get_chroma_collection()   <span class="cm"># runs at import — container boot</span></code></pre>
+  <p style="margin:10px 0 0">The collection handle was bound once when the
+  container started and never refreshed, so even writes made by
+  <em>the same container</em> after boot were not reliably visible.</p>
+</div>
+
+<p>This is the lesson the current version is built around:
+<strong>stateful storage does not belong inside stateless compute.</strong> The
+fix was never a code change — it was either moving the index out of the
+container, or stopping using many containers.</p>
+
+<h2>stub.py — the deployment</h2>
+
+<p>Fifty-one lines that describe the whole environment. The build strategy is
+the part worth studying, because it shaped everything about the workflow.</p>
+
+<pre><code>image = (
+    modal.Image.debian_slim(python_version="3.10")
+    .apt_install("git")
+    .run_commands(
+        f"echo <span class="hl">rebuild-trigger-{modal.__version__}</span>",  <span class="cm"># forces rebuild</span>
+        "rm -rf Delphion",
+        f"git clone {GITHUB_REPO}",
+        "pip install uv",
+        "uv pip install --system -r Delphion/requirements.txt",
+    )
+)</code></pre>
+
+<p>The application code was baked into the image <em>at build time, by cloning
+from GitHub</em>. Three consequences followed:</p>
+
+<ul>
+  <li>You could only deploy code already pushed to <code>main</code>. Local
+  edits were invisible to the deployment, so there was no fast local loop.</li>
+  <li>Docker layer caching reused a stale clone when the command was unchanged,
+  so a fresh push produced no change — hence the <code>echo
+  rebuild-trigger-…</code> line, which exists purely to bust the cache.</li>
+  <li>Every deploy was a full image rebuild and dependency reinstall, making
+  the edit → test cycle minutes long.</li>
+</ul>
+
+<p>Inside the container, <code>fastapi_app()</code> asserts the key injected by
+<code>modal.Secret.from_name("delphion-secret")</code>, appends
+<code>/Delphion</code> to <code>sys.path</code>, imports the three sub-apps and
+mounts them.</p>
+
+<div class="note">
+  <strong>Doubled path segments</strong>
+  A sub-app mounted at <code>/embed</code> whose own route is also
+  <code>/embed</code> is reachable at <code>/embed/embed</code>. Both clients
+  hardcode this shape. Harmless, but it reads as a mistake to anyone opening
+  the URL list cold.
+</div>
+
+<h2>The three services</h2>
+
+<h4>embedder.py — ingestion</h4>
+
+<p><code>POST /embed</code>, multipart: <code>files[]</code> plus form fields
+for chunking method, size and overlap. The most carefully written file in this
+version:</p>
+
+<pre><code>clean_name = os.path.basename(file.filename)
+filename = f"{uuid.uuid4()}_{clean_name}"
+file_path = f"/tmp/{filename}"</code></pre>
+
+<div class="good">
+  <strong>Genuinely good defensive code</strong>
+  <code>os.path.basename</code> strips any <code>../</code> path-traversal
+  attempt from a client-supplied filename, and the UUID prefix prevents
+  collisions between up to 100 concurrent requests sharing one container’s
+  <code>/tmp</code>. Most portfolio code ignores both risks.
+</div>
+
+<p>It then reports the chunk count by reaching into Chroma’s private internals:</p>
+
+<pre><code>count = 0
+try:
+    count = collection._collection.count()   <span class="cm"># private API</span>
+except Exception:
+    pass                                     <span class="cm"># ← silently reports 0</span></code></pre>
+
+<p>A bare <code>except: pass</code> around a private attribute means any upstream
+library change silently reports zero chunks — and the response then claims
+<code>"embedding failed"</code> regardless of whether embedding worked.</p>
+
+<h4>retriever.py — search</h4>
+
+<p>The smallest and cleanest file: twenty-seven lines, a Pydantic
+<code>RetrieverInput(input: str, k: int = 4)</code>, a
+<code>similarity_search</code>, and a response carrying <em>both</em> a joined
+string and a structured list of chunks with metadata.</p>
+
+<div class="good">
+  <strong>Good API design</strong>
+  Returning <code>{"output": "…", "chunks": [...]}</code> lets a simple client
+  render the string and a richer one use the structure. That dual shape carried
+  forward into the current version’s cited-passages panel.
+</div>
+
+<p>Its only flaw is the import-time binding described above.</p>
+
+<h4>generator.py — never implemented</h4>
+
+<div class="bug">
+  <strong>This file is a copy of embedder.py</strong>
+  It defines <code>POST /embed</code>, saves uploads, and calls
+  <code>load_documents</code>. It contains no LLM call of any kind. Mounted at
+  <code>/generate</code>, the endpoint the UI actually called —
+  <code>POST /generate/generate</code> — did not exist and returned 404.
+</div>
+
+<p>So the “Generator” box in both clients always showed
+<code>"No generator output"</code>, and <strong>there was no retrieve → generate
+pipeline at all</strong>. A user retrieved passages into one textbox and would
+have had to paste them into another by hand. The RAG loop was open in this
+version; the only working end-to-end path was still v1’s
+<code>predict.py</code>, which this version didn’t use.</p>
+
+<p>It also regressed the embedder’s filename handling, writing to
+<code>/tmp/{file.filename}</code> with no <code>basename</code> and no UUID —
+reintroducing both the traversal and the collision risk that
+<code>embedder.py</code> had fixed.</p>
+
+<h2>Request traces</h2>
+
+<h3>Uploading a PDF</h3>
+<ol>
+  <li><code>app.py:upload_pdfs</code> opens each Gradio temp file and POSTs
+  multipart to <code>{BASE_API}/embed/embed</code>.</li>
+  <li>Modal routes to <em>some</em> container; FastAPI dispatches to
+  <code>embedder.embed</code>.</li>
+  <li>Files are written to <code>/tmp/{uuid}_{name}</code>.</li>
+  <li><code>load_documents()</code> → <code>PyMuPDFLoader</code> → one Document
+  per page.</li>
+  <li><code>ChunkingFactory.create_chunker(...)</code> returns a lambda;
+  calling it produces chunks.</li>
+  <li><code>create_vectorstore()</code> → <code>OpenAIEmbeddings</code>
+  (<code>text-embedding-3-large</code>) →
+  <code>Chroma.from_texts(persist_directory="./chroma_db")</code>.</li>
+  <li><code>collection._collection.count()</code> →
+  <code>{"status": "embedding complete", "chunks": N}</code>.</li>
+</ol>
+
+<h3>Asking a question</h3>
+<ol>
+  <li><code>app.py:ask_question</code> POSTs <code>{"input": q, "k": k}</code>
+  to <code>/retriever/retriever</code>.</li>
+  <li>Modal routes to <em>a</em> container — possibly a different one.</li>
+  <li><code>retriever.retrieve</code> uses the module-level
+  <code>collection</code> bound at that container’s boot.</li>
+  <li>If that container never handled the upload, the folder is empty,
+  <code>similarity_search</code> returns <code>[]</code>, and the UI shows
+  nothing.</li>
+</ol>
+
+<p>Step 4 is where this version died.</p>
+
+<h2>Everything that was wrong</h2>
+
+<table>
+  <tr><th>#</th><th>Issue</th><th>Where</th></tr>
+  <tr><td>1</td><td>Split state — index on container-local disk, many containers</td><td>architecture</td></tr>
+  <tr><td>2</td><td>Collection bound at import time, never refreshed</td><td><code>retriever.py:6</code></td></tr>
+  <tr><td>3</td><td>No <code>/generate</code> endpoint exists</td><td><code>generator.py</code></td></tr>
+  <tr><td>4</td><td>Retrieve → generate never wired; user copy-pastes</td><td>both clients</td></tr>
+  <tr><td>5</td><td>Build-time <code>git clone</code> + cache-busting hack</td><td><code>stub.py</code></td></tr>
+  <tr><td>6</td><td>Ephemeral <code>-dev</code> URL hardcoded in clients</td><td><code>app.py</code>, <code>test.py</code></td></tr>
+  <tr><td>7</td><td>Private-API chunk count, silently swallowed</td><td><code>embedder.py:45</code></td></tr>
+  <tr><td>8</td><td>Filename sanitisation regressed</td><td><code>generator.py:15</code></td></tr>
+  <tr><td>9</td><td><code>mcp/</code> shadows the PyPI <code>mcp</code> package</td><td>package name</td></tr>
+  <tr><td>10</td><td>Inherited: metadata discarded, <code>persist()</code> raises,
+      markdown chunker crashes, full OpenAI dependency</td><td>from v1</td></tr>
+</table>
+
+<h2>What it got right</h2>
+
+<div class="good">
+  <strong>Worth recording</strong>
+  <ul style="margin:8px 0 0">
+    <li>The <strong>service boundaries were correct</strong> — embed / retrieve
+    / generate is the right decomposition of a RAG system.</li>
+    <li><strong>Secret injection via Modal</strong> was the proper way to handle
+    the API key: never in the repo, never in the image.</li>
+    <li>The retriever’s <strong>dual string-plus-structured response</strong>
+    was a thoughtful API.</li>
+    <li>The embedder’s <strong>filename sanitisation</strong> showed awareness
+    of a bug class most projects never consider.</li>
+    <li>It <strong>deployed</strong> — a build image, a secret, a public URL.
+    That is a real step past “runs on my laptop”.</li>
+  </ul>
+</div>
+
+<h2>Why it was replaced</h2>
+
+<p>The bug was not fixable in code. It required either moving the index out of
+the container — a hosted vector database or an attached volume — or not using
+many containers.</p>
+
+<p>With no budget and no requirement for persistence, the current version takes
+the second path: one process, one in-memory index scoped to a browser session,
+on a free Hugging Face Space. Embeddings moved to a local ONNX model, so the
+high-volume call costs nothing; generation points at any OpenAI-compatible
+endpoint. And the job this version started — an actual generator, wired to
+retrieval — is finally finished.</p>
+
+<footer>
+  Delphion · archived version 2 · see <code>README.md</code> in this folder for
+  the file-by-file reference, and
+  <code>../v1-gradio-monolith/BREAKDOWN.html</code> for what came before.
+</footer>
+
+</div>
+</body>
+</html>

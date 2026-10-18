@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What throughput did the system reach on the 8-node cluster?",
+    "answer_span": "sustained 1.4 million operations per second across eight nodes",
+    "source": "benchmark-report.pdf",
+    "page": 7
+  },
+  {
+    "question": "Which licence does the project use?",
+    "answer_span": "released under the Apache License, Version 2.0",
+    "source": "handbook.pdf",
+    "page": 2
+  }
+]

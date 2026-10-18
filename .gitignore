@@ -1,3 +1,13 @@
 .env
-bob
 __pycache__/
+.gradio/
+chroma_db/
+*.pyc
+
+eval/results/
+eval/corpus/*.pdf
+eval/questions.draft.json
+
+# Source books are copyrighted and large; keep them local
+books/
+.venv/

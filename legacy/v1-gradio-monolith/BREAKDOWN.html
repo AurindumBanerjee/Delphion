@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delphion v1 — Gradio Monolith</title>
+<style>
+  :root{
+    --bg:#fbfaf8; --panel:#ffffff; --ink:#1a1815; --muted:#6b665e;
+    --line:#e3ded6; --accent:#7c5cff; --accent-soft:#f0ecff;
+    --warn:#b4530a; --warn-soft:#fdf1e5; --ok:#2f6f4f; --ok-soft:#e9f4ee;
+    --code-bg:#f5f2ee;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#14130f; --panel:#1c1a16; --ink:#ece7de; --muted:#9c958a;
+      --line:#2e2b25; --accent:#a996ff; --accent-soft:#241f3d;
+      --warn:#e39355; --warn-soft:#2c1f14; --ok:#7fc4a1; --ok-soft:#15251d;
+      --code-bg:#211e19;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 ui-serif,Georgia,"Iowan Old Style",serif;}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px 96px}
+  header{padding:64px 0 40px;border-bottom:1px solid var(--line);margin-bottom:48px}
+  .tag{display:inline-block;font:600 11px/1 ui-sans-serif,system-ui,sans-serif;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:100px;padding:6px 12px;margin-bottom:20px}
+  h1{font-size:44px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em}
+  .sub{font-size:19px;color:var(--muted);margin:0;max-width:60ch}
+  h2{font-size:27px;margin:56px 0 8px;letter-spacing:-.01em;
+    padding-top:24px;border-top:1px solid var(--line)}
+  h3{font:600 15px/1.4 ui-sans-serif,system-ui,sans-serif;letter-spacing:.04em;
+    text-transform:uppercase;color:var(--muted);margin:36px 0 10px}
+  h4{font-size:19px;margin:32px 0 6px}
+  p{margin:14px 0}
+  code{font:13.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+    background:var(--code-bg);padding:2px 5px;border-radius:4px}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:10px;
+    padding:16px 18px;overflow-x:auto;margin:18px 0}
+  pre code{background:none;padding:0;font-size:13px;line-height:1.6}
+  .cm{color:var(--muted)}
+  .hl{background:var(--warn-soft);border-radius:3px;padding:1px 3px}
+  table{width:100%;border-collapse:collapse;margin:20px 0;
+    font:14.5px/1.5 ui-sans-serif,system-ui,sans-serif}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);
+    vertical-align:top}
+  th{font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--muted)}
+  td code{font-size:12.5px}
+  .note{border-left:3px solid var(--accent);background:var(--accent-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .bug{border-left:3px solid var(--warn);background:var(--warn-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .good{border-left:3px solid var(--ok);background:var(--ok-soft);
+    padding:14px 18px;border-radius:0 8px 8px 0;margin:22px 0;font-size:15px}
+  .note strong,.bug strong,.good strong{
+    font:600 11px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.1em;
+    text-transform:uppercase;display:block;margin-bottom:6px}
+  .note strong{color:var(--accent)} .bug strong{color:var(--warn)} .good strong{color:var(--ok)}
+  figure{margin:32px 0;padding:24px;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+  figcaption{font:13px/1.5 ui-sans-serif,system-ui,sans-serif;color:var(--muted);
+    margin-top:16px;text-align:center}
+  svg{display:block;margin:0 auto;max-width:100%;height:auto}
+  .s-box{fill:var(--panel);stroke:var(--line)}
+  .s-hot{fill:var(--warn-soft);stroke:var(--warn)}
+  .s-state{fill:var(--accent-soft);stroke:var(--accent)}
+  .s-t{fill:var(--ink);font:13px ui-sans-serif,system-ui,sans-serif}
+  .s-m{fill:var(--muted);font:11px ui-sans-serif,system-ui,sans-serif}
+  .s-l{stroke:var(--muted);fill:none;stroke-width:1.5}
+  ol,ul{padding-left:22px} li{margin:7px 0}
+  footer{margin-top:72px;padding-top:24px;border-top:1px solid var(--line);
+    font:14px/1.6 ui-sans-serif,system-ui,sans-serif;color:var(--muted)}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="tag">Archived · Version 1</div>
+  <h1>The Gradio Monolith</h1>
+  <p class="sub">One process, one UI, one Chroma collection held in session
+  memory. The first version of Delphion that actually answered a question about
+  a PDF — and the last one that cost money every time it did.</p>
+</header>
+
+<h2>The shape of it</h2>
+
+<p>Everything happened inside a single Python process. There were no services,
+no queues, no network hops. An upload handler built a vector index and handed
+the live object back to Gradio, which kept it in per-browser session state; a
+message handler took that same object, searched it, and called OpenAI.</p>
+
+<p>Two paths, meeting at one piece of state:</p>
+
+<figure>
+<svg viewBox="0 0 760 470" role="img" aria-label="Architecture of version 1">
+  <rect x="8" y="8" width="744" height="454" rx="14" class="s-box" stroke-dasharray="5 4"/>
+  <text x="24" y="32" class="s-m">single Python process — ui.py</text>
+
+  <!-- ingest lane -->
+  <text x="40" y="68" class="s-m">INGEST</text>
+  <rect x="40" y="80" width="270" height="40" rx="8" class="s-box"/>
+  <text x="56" y="105" class="s-t">PDF upload → process_upload()</text>
+
+  <path d="M175 120 L175 148" class="s-l" marker-end="url(#a)"/>
+  <rect x="40" y="148" width="270" height="46" rx="8" class="s-box"/>
+  <text x="56" y="168" class="s-t">load_documents()</text>
+  <text x="56" y="185" class="s-m">PyMuPDFLoader → one Document per page</text>
+
+  <path d="M175 194 L175 222" class="s-l" marker-end="url(#a)"/>
+  <rect x="40" y="222" width="270" height="46" rx="8" class="s-box"/>
+  <text x="56" y="242" class="s-t">ChunkingFactory.create_chunker()</text>
+  <text x="56" y="259" class="s-m">recursive · semantic · markdown</text>
+
+  <path d="M175 268 L175 296" class="s-l" marker-end="url(#a)"/>
+  <rect x="40" y="296" width="270" height="46" rx="8" class="s-hot"/>
+  <text x="56" y="316" class="s-t">create_vectorstore()</text>
+  <text x="56" y="333" class="s-m">OpenAI text-embedding-3-large — paid</text>
+
+  <path d="M175 342 L175 368" class="s-l" marker-end="url(#a)"/>
+  <rect x="40" y="368" width="270" height="40" rx="8" class="s-box"/>
+  <text x="56" y="393" class="s-t">Chroma → ./chroma_db</text>
+
+  <!-- state -->
+  <rect x="330" y="205" width="120" height="76" rx="10" class="s-state"/>
+  <text x="352" y="238" class="s-t">gr.State</text>
+  <text x="345" y="256" class="s-m">collection</text>
+  <text x="349" y="271" class="s-m">(in memory)</text>
+
+  <path d="M310 318 C 380 318, 390 300, 390 285" class="s-l" marker-end="url(#a)"/>
+  <path d="M450 243 L 480 243" class="s-l" marker-end="url(#a)"/>
+
+  <!-- query lane -->
+  <text x="480" y="68" class="s-m">QUERY</text>
+  <rect x="480" y="80" width="240" height="40" rx="8" class="s-box"/>
+  <text x="496" y="105" class="s-t">question → process_message()</text>
+
+  <path d="M600 120 L600 148" class="s-l" marker-end="url(#a)"/>
+  <rect x="480" y="148" width="240" height="46" rx="8" class="s-box"/>
+  <text x="496" y="168" class="s-t">predict()</text>
+  <text x="496" y="185" class="s-m">similarity_search(k=3) — hardcoded</text>
+
+  <path d="M600 194 L600 296" class="s-l" marker-end="url(#a)"/>
+  <rect x="480" y="296" width="240" height="46" rx="8" class="s-hot"/>
+  <text x="496" y="316" class="s-t">OpenAI gpt-3.5-turbo</text>
+  <text x="496" y="333" class="s-m">paid, per question</text>
+
+  <path d="M600 342 L600 368" class="s-l" marker-end="url(#a)"/>
+  <rect x="480" y="368" width="240" height="40" rx="8" class="s-box"/>
+  <text x="496" y="393" class="s-t">answer → gr.Chatbot</text>
+
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+      markerHeight="6" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/>
+    </marker>
+  </defs>
+</svg>
+<figcaption>Orange marks the two paid OpenAI calls. Purple marks the only
+durable state — and it lived in RAM, not on disk.</figcaption>
+</figure>
+
+<div class="note">
+  <strong>The detail that mattered</strong>
+  <code>./chroma_db</code> was written to disk, but nothing ever read it back.
+  The collection object returned into <code>gr.State</code> was the real source
+  of truth. Refresh the page and your documents were gone. This was harmless
+  here — and became the defining bug of v2, where the same on-disk index was
+  suddenly expected to be shared across containers.
+</div>
+
+<h2>ui.py — the whole application</h2>
+
+<p>139 lines of <code>gr.Blocks</code>. The interesting part is not the layout
+but how state moved through it.</p>
+
+<pre><code>collection_state = gr.State(None)
+
+def process_upload(files, method, c_size, c_overlap):
+    collection = load_documents(files, chunking_method=method,
+                                chunk_size=c_size, chunk_overlap=c_overlap)
+    return collection, "Successfully processed…"   <span class="cm"># ← object into state</span>
+
+file_output.upload(
+    fn=process_upload,
+    inputs=[file_output, chunking_method, chunk_size, chunk_overlap],
+    outputs=[collection_state, upload_status],     <span class="cm"># ← stored per session</span>
+)</code></pre>
+
+<p>Returning a live Python object <em>as a Gradio output</em> is what put the
+Chroma handle in session state. It is an elegant trick and the reason this
+version needed no database wiring at all.</p>
+
+<p>The message path is symmetrical, and uses a small idiom worth keeping:</p>
+
+<pre><code>def process_message(message, history, collection, sys_prompt):
+    if not message.strip():
+        return history, ""
+    updated_history = predict(message, history, collection, sys_prompt)
+    return updated_history, ""     <span class="cm"># empty string clears the textbox</span></code></pre>
+
+<div class="bug">
+  <strong>Latent crash</strong>
+  The UI forwarded <code>chunk_size</code> and <code>chunk_overlap</code> to
+  every chunker via the factory, but
+  <code>markdown_header_chunk_documents(documents, headers_to_split_on=None)</code>
+  accepted neither. Selecting <em>markdown</em> raised <code>TypeError</code>.
+  It went unnoticed because nobody chose that option.
+</div>
+
+<h2>predict.py — the entire RAG loop</h2>
+
+<p>Sixty-seven lines, of which about fifteen matter:</p>
+
+<pre><code>context_chunks = collection.similarity_search(message, <span class="hl">k=3</span>)
+context_text = "\n\n".join([doc.page_content for doc in context_chunks])
+
+client = OpenAI()
+completion = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user",
+         "content": f"Question: {message}\n\nContext: {context_text}"},
+    ],
+)
+reply = completion.choices[0].message.content</code></pre>
+
+<p>Retrieve three chunks, flatten them into one string, paste into a prompt.
+That is the whole thing, and for a first version it is the right amount of
+code. What it could not do is explain itself.</p>
+
+<div class="bug">
+  <strong>Citations were structurally impossible</strong>
+  The default system prompt asked the model to “cite the relevant section or
+  page if possible”. But the chunks were joined into one undifferentiated blob
+  with no source or page markers — the model had nothing to cite <em>with</em>.
+  The metadata existed: <code>load_documents</code> assembled source, author,
+  title, creation date and page number into <code>all_metadatas</code>, then
+  passed LangChain’s defaults to the store instead and threw its own work away.
+</div>
+
+<h3>Three smaller things</h3>
+
+<table>
+  <tr><th>Line</th><th>Issue</th></tr>
+  <tr>
+    <td><code>predict.py:24</code></td>
+    <td><code>os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")</code>
+    — a no-op when the key is set, and <code>TypeError: str expected, not
+    NoneType</code> when it isn’t. A missing key failed confusingly instead of
+    clearly.</td>
+  </tr>
+  <tr>
+    <td><code>predict.py:38</code></td>
+    <td><code>k=3</code> hardcoded. The UI had no top-k control, so retrieval
+    breadth was never tunable or measurable.</td>
+  </tr>
+  <tr>
+    <td><code>predict.py:27</code></td>
+    <td>History used Gradio’s legacy tuple format <code>(user, bot)</code> with
+    <code>None</code> as a pending-reply placeholder. Modern Gradio prefers
+    <code>{"role", "content"}</code> dicts.</td>
+  </tr>
+</table>
+
+<h2>The two dead files</h2>
+
+<p>Both are kept because they show the iteration, not because they ran.</p>
+
+<h4>chunking.py</h4>
+<p>Twelve lines: a bare <code>CharacterTextSplitter</code> at 500/50. Never
+imported by the factory. Superseded before this version shipped.</p>
+
+<h4>semantic_chunking.py</h4>
+<p>An earlier semantic chunker — <code>CharacterTextSplitter</code> first, then
+<code>SemanticChunker</code> over the result, on
+<code>text-embedding-ada-002</code>. Also never imported: the factory pulled
+<code>semantic_chunk_documents</code> from <code>advanced_chunking.py</code>,
+which used <code>text-embedding-3-small</code>.</p>
+
+<div class="bug">
+  <strong>Two functions, one name</strong>
+  <code>semantic_chunk_documents</code> existed in two modules with different
+  signatures and different embedding models. Only one was reachable. This is
+  the kind of ambiguity that costs an hour of debugging six months later, and
+  it is why both files were deleted rather than fixed in the current version.
+</div>
+
+<h2>What it cost</h2>
+
+<p>Every upload paid OpenAI proportional to document length. Every question paid
+twice — once to embed the query, once to generate the answer. The chunk
+embedding cost scaled with the corpus; the query cost scaled with traffic.</p>
+
+<table>
+  <tr><th>Call</th><th>Model</th><th>Frequency</th></tr>
+  <tr><td>Chunk embedding</td><td><code>text-embedding-3-large</code></td>
+      <td>once per chunk, per upload</td></tr>
+  <tr><td>Semantic chunking</td><td><code>text-embedding-3-small</code></td>
+      <td>once per sentence, if selected</td></tr>
+  <tr><td>Query embedding</td><td><code>text-embedding-3-large</code></td>
+      <td>once per question</td></tr>
+  <tr><td>Generation</td><td><code>gpt-3.5-turbo</code></td>
+      <td>once per question</td></tr>
+</table>
+
+<p>This is the reason the project moved on. Not that it was expensive to run
+personally — it wasn’t — but that publishing it meant paying for every
+visitor’s curiosity, which made it undeployable.</p>
+
+<div class="good">
+  <strong>What it got right</strong>
+  Session-scoped state via <code>gr.State</code> was the correct instinct, and
+  the current version came back to it. The chunking factory was a clean
+  abstraction. The system prompt was well written — grounded, with an explicit
+  refusal string. The bones were sound; the economics weren’t.
+</div>
+
+<h2>Where it went</h2>
+
+<p><strong>v2</strong> split the monolith into embedder / retriever / generator
+services on Modal, to make the expensive parts independently scalable. It
+introduced a worse bug: the on-disk Chroma index that v1 never relied on
+suddenly had to be shared across autoscaled containers, and wasn’t.</p>
+
+<p><strong>v3</strong> — the current root application — returned to a single
+process and to session-scoped state, but replaced OpenAI embeddings with a
+local ONNX model running in-process and made the index explicitly in-memory. It
+keeps v1’s simplicity and drops v1’s bill.</p>
+
+<footer>
+  Delphion · archived version 1 · see <code>README.md</code> in this folder for
+  the file-by-file reference, and
+  <code>../v2-modal-mcp/BREAKDOWN.html</code> for what came next.
+</footer>
+
+</div>
+</body>
+</html>
