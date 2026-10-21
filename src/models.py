@@ -6,7 +6,7 @@ Two seams, so switching vendors is a config change and never a code change:
 """
 
 from functools import lru_cache
-from typing import Iterator, List
+from typing import Callable, Iterator, List, Mapping, Optional
 
 from langchain_core.embeddings import Embeddings
 
@@ -67,40 +67,67 @@ def get_reranker():
         return None
 
 
-@lru_cache(maxsize=1)
-def _client():
+def _make_client(api_key: str):
     from openai import OpenAI
 
-    return OpenAI(
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key or "not-needed",
-    )
+    return OpenAI(base_url=settings.llm_base_url, api_key=api_key)
 
 
-def chat(system_prompt: str, user_prompt: str) -> str:
+@lru_cache(maxsize=1)
+def _client():
+    """The shared server-key client. Cached: it is the same for every visitor."""
+    return _make_client(settings.llm_api_key or "not-needed")
+
+
+def _client_for(api_key: Optional[str]):
+    """A visitor's own key gets a fresh client per call. It is never cached and never
+    stored in `settings`, so it cannot outlive the request or reach another session."""
+    return _make_client(api_key) if api_key else _client()
+
+
+def _messages(system_prompt: str, user_prompt: str):
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+
+
+def chat(system_prompt: str, user_prompt: str, api_key: Optional[str] = None,
+         on_headers: Optional[Callable[[Mapping], None]] = None) -> str:
     """Single-turn completion against the configured endpoint."""
-    completion = _client().chat.completions.create(
+    raw = _client_for(api_key).chat.completions.with_raw_response.create(
         model=settings.llm_model,
         temperature=settings.temperature,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
+        messages=_messages(system_prompt, user_prompt),
     )
-    return completion.choices[0].message.content
+    if on_headers:
+        on_headers(raw.headers)
+    return raw.parse().choices[0].message.content
 
 
-def chat_stream(system_prompt: str, user_prompt: str) -> Iterator[str]:
-    """Streaming variant: yields text deltas as the model produces them."""
-    stream = _client().chat.completions.create(
+def chat_stream(system_prompt: str, user_prompt: str, api_key: Optional[str] = None,
+                on_headers: Optional[Callable[[Mapping], None]] = None) -> Iterator[str]:
+    """Streaming variant: yields text deltas as the model produces them. The rate-limit
+    headers arrive with the response head, so `on_headers` fires before the first token."""
+    raw = _client_for(api_key).chat.completions.with_raw_response.create(
         model=settings.llm_model,
         temperature=settings.temperature,
         stream=True,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
+        messages=_messages(system_prompt, user_prompt),
     )
-    for event in stream:
+    if on_headers:
+        on_headers(raw.headers)
+    for event in raw.parse():
         if event.choices and event.choices[0].delta and event.choices[0].delta.content:
             yield event.choices[0].delta.content
+
+
+def probe(api_key: Optional[str] = None) -> Mapping:
+    """One minimal request (max_tokens=1); returns the response headers. Used to validate
+    a key and to refresh the usage panel. Costs one request."""
+    raw = _client_for(api_key).chat.completions.with_raw_response.create(
+        model=settings.llm_model,
+        max_tokens=1,
+        messages=[{"role": "user", "content": "ping"}],
+    )
+    return raw.headers
