@@ -5,12 +5,29 @@ Two seams, so switching vendors is a config change and never a code change:
   chat()           -> one call against any OpenAI-compatible chat endpoint
 """
 
+from contextvars import ContextVar
 from functools import lru_cache
 from typing import Callable, Iterator, List, Mapping, Optional
 
 from langchain_core.embeddings import Embeddings
 
 from src.config import settings
+
+# An optional per-request hook so the UI can show real embedding progress. It is set and
+# read inside one request's context, so concurrent visitors never see each other's ticks.
+_embed_progress: ContextVar[Optional[Callable[[int], None]]] = ContextVar(
+    "embed_progress", default=None
+)
+_TICK_EVERY = 16  # report every N embedded passages, not every one
+
+
+def set_embed_progress(callback: Optional[Callable[[int], None]]):
+    """Install `callback(n_just_embedded)` for the current request; returns a reset token."""
+    return _embed_progress.set(callback)
+
+
+def reset_embed_progress(token) -> None:
+    _embed_progress.reset(token)
 
 
 class FastEmbedEmbeddings(Embeddings):
@@ -27,7 +44,15 @@ class FastEmbedEmbeddings(Embeddings):
         self._model = TextEmbedding(model_name=model_name)
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
-        return [vec.tolist() for vec in self._model.embed(list(texts))]
+        out: List[List[float]] = []
+        tick = _embed_progress.get()
+        for vec in self._model.embed(list(texts)):
+            out.append(vec.tolist())
+            if tick and len(out) % _TICK_EVERY == 0:
+                tick(_TICK_EVERY)
+        if tick and len(out) % _TICK_EVERY:
+            tick(len(out) % _TICK_EVERY)
+        return out
 
     def embed_query(self, text: str) -> List[float]:
         return self.embed_documents([text])[0]

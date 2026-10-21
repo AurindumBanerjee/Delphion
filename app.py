@@ -12,7 +12,7 @@ import gradio as gr
 from dotenv import load_dotenv
 from loguru import logger
 
-from src import keys, usage
+from src import keys, models, theme, usage
 from src.chunking.chunking_factory import ChunkingFactory
 from src.config import DEFAULT_SYSTEM_PROMPT, settings
 from src.extract_from_pdf import load_and_chunk
@@ -65,19 +65,39 @@ def do_refresh(user_key, own_book):
     return (f"{panel}\n\n_{note}_" if note else panel), book
 
 
-def ingest(files, method, size, overlap):
+def ingest(files, method, size, overlap, progress=gr.Progress()):
     """Upload handler: PDFs -> chunks -> in-memory index held in session state."""
     if not files:
         return None, "No files uploaded."
+    return _index([f.name for f in files], method, size, overlap, progress=progress)
+
+
+def _index(paths, method, size, overlap, label=None, progress=None):
+    """Index PDFs, reporting real progress: reading, then embedding passage by passage."""
+    step = progress or (lambda *args, **kwargs: None)
     try:
-        paths = [f.name for f in files]
+        step(0.02, desc="📖 Reading and splitting the PDFs…")
         chunks = load_and_chunk(paths, method, int(size), int(overlap))
         if not chunks:
             return None, "No text could be extracted. Is the PDF a scanned image?"
-        store = build_vectorstore(chunks)
+
+        total, done = len(chunks), 0
+
+        def tick(n):  # called every few embedded passages, inside this request only
+            nonlocal done
+            done = min(done + n, total)
+            step(0.12 + 0.83 * done / total, desc=f"✨ Embedding passages… {done} / {total}")
+
+        step(0.12, desc=f"✨ Embedding {total} passages…")
+        token = models.set_embed_progress(tick)
+        try:
+            store = build_vectorstore(chunks)
+        finally:
+            models.reset_embed_progress(token)
+        step(1.0, desc="Done")
         return store, (
-            f"Indexed **{len(chunks)} chunks** from {len(paths)} file(s) "
-            f"using *{method}* chunking. Ask away."
+            f"✨ Indexed **{total} chunks** from "
+            f"{label or f'{len(paths)} file(s)'} using *{method}* chunking. Ask away."
         )
     except Exception as exc:
         logger.exception("Ingestion failed")
@@ -113,9 +133,11 @@ def ask(question, history, store, k, system_prompt, mode, user_key, own_book):
         yield history, "", sources, panel_for(user_key, book), book
 
 
-with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
+with gr.Blocks(
+    theme=theme.build_theme(), css=theme.build_css(), js=theme.FORCE_DARK_JS, title="Delphion"
+) as demo:
     gr.Markdown(
-        "# Delphion\n"
+        "# <span class='star-mark'>✦</span> Delphion\n"
         "Ask questions across your PDFs. Answers cite the passages they came from.\n\n"
         "*Documents are indexed in memory for your session only — nothing is stored.*"
     )
