@@ -120,6 +120,33 @@ and, despite paraphrasing, share key terms with their answers. That favours
 lexical matching, so BM25's numbers here are an upper bound for it, not a
 general claim that BM25 beats embeddings.
 
+## Answer quality (small sample)
+
+A 14-question sample (`eval/questions.judge.json`: 5, 5 and 4 questions from the
+three books), recursive chunking at 1000, graded by an LLM judge
+(`openai/gpt-oss-20b` on Groq). Small sample, run on 2026-10-21:
+
+| Retrieval | Answer correct | Faithful | hit@1 | hit@5 | MRR@5 |
+|---|---:|---:|---:|---:|---:|
+| hybrid_rerank | 0.96 | 1.00 | 0.93 | 1.00 | 0.95 |
+| dense | 0.68 | 0.64 | 0.14 | 0.64 | 0.32 |
+
+Caveats, please read before quoting any of this:
+
+- **Tiny sample.** With 14 questions one question moves a score by about 7
+  points. The sample also happens to be harder for dense retrieval than the full
+  set. **Do not quote the dense hit@1 of 0.14**; the 42-question table above
+  (dense hit@1 0.45) is the number to cite.
+- **The judge may share a model family with the answerer.** The same endpoint
+  and model (`gpt-oss-20b`) generated the answers and graded them, which tends
+  to inflate agreement. Treat the answer-quality columns as directional.
+- **Latency was measured under load.** Other jobs were using the CPU during the
+  run, so the reranked query time (about 2.2 s p50) overstates what an idle
+  machine would see.
+- Groq's free tier caps daily tokens, so a full 42-question judge run did not fit
+  in one day. Re-run with `--questions eval/questions.json --judge` once you have
+  the budget.
+
 ## Configuration
 
 Copy `.env.example` to `.env` (locally) or set these as Space secrets:
