@@ -8,6 +8,8 @@ Single-process Gradio app, sized for a free Hugging Face Space:
   * generation goes to any OpenAI-compatible endpoint you configure
 """
 
+from pathlib import Path
+
 import gradio as gr
 from dotenv import load_dotenv
 from loguru import logger
@@ -25,6 +27,17 @@ load_dotenv()
 METHODS = ChunkingFactory.get_chunking_methods()
 
 
+SAMPLE_PDF = Path(__file__).parent / "samples" / "alice_in_wonderland.pdf"
+# Checked against the sample: the first three surface the answer in every retrieval
+# mode. The last two are where one method alone misses, so switching modes shows why
+# hybrid helps: dense misses the "school lessons" answer, BM25 misses the "hurry" one.
+SAMPLE_QUESTIONS = [
+    "What did the jar Alice took from the shelf say on it?",
+    "What does the Cheshire Cat leave behind when it vanishes?",
+    "What was the Caterpillar smoking?",
+    "What did Alice write about the Mock Turtle's school lessons?",
+    "Why was the White Rabbit in a hurry?",
+]
 KEY_WARNING = (
     "> ⚠️ **No LLM key is configured on this Space.** Retrieval and the passages "
     "below still work, but answers need the `LLM_API_KEY` secret, or your own key "
@@ -70,6 +83,11 @@ def ingest(files, method, size, overlap, progress=gr.Progress()):
     if not files:
         return None, "No files uploaded."
     return _index([f.name for f in files], method, size, overlap, progress=progress)
+
+
+def load_sample(method, size, overlap, progress=gr.Progress()):
+    """One click: index the bundled public-domain sample so the demo needs no upload."""
+    return _index([str(SAMPLE_PDF)], method, size, overlap, label="the sample", progress=progress)
 
 
 def _index(paths, method, size, overlap, label=None, progress=None):
@@ -152,6 +170,7 @@ with gr.Blocks(
     with gr.Row():
         with gr.Column(scale=1):
             files = gr.Files(label="Upload PDFs", file_types=[".pdf"])
+            sample_btn = gr.Button("Load sample (Alice in Wonderland, public domain)")
             method = gr.Radio(
                 choices=list(METHODS), value="recursive", label="Chunking method"
             )
@@ -189,6 +208,7 @@ with gr.Blocks(
                 )
                 send = gr.Button("Ask", variant="primary", scale=1)
             gr.ClearButton([question, chatbot], value="Clear chat")
+            gr.Examples(SAMPLE_QUESTIONS, inputs=question, label="Try with the sample")
             with gr.Accordion("Usage", open=True):
                 usage_md = gr.Markdown(panel_for(None, None))
                 with gr.Row():
@@ -202,6 +222,13 @@ with gr.Blocks(
     files.upload(
         ingest,
         [files, method, size, overlap],
+        [store_state, status],
+        show_progress="full",
+    )
+
+    sample_btn.click(
+        load_sample,
+        [method, size, overlap],
         [store_state, status],
         show_progress="full",
     )

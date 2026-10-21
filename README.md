@@ -147,6 +147,16 @@ Caveats, please read before quoting any of this:
   in one day. Re-run with `--questions eval/questions.json --judge` once you have
   the budget.
 
+## Try it with the sample
+
+Click **Load sample** to index a bundled public-domain document, *Alice's Adventures in
+Wonderland* by Lewis Carroll (1865, text from
+[Project Gutenberg](https://www.gutenberg.org/ebooks/11)), without uploading anything.
+The example questions under the chat were checked against it: the first three surface the
+answer in every retrieval mode, and the last two are where dense or BM25 alone misses, so
+switching the **Retrieval mode** shows why hybrid helps. The benchmark books in `books/`
+are not part of this.
+
 ## Using your own API key
 
 The demo runs on a shared key with a limited free quota. Open **Use your own API key**,
