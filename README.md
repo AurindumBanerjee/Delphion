@@ -154,7 +154,7 @@ Copy `.env.example` to `.env` (locally) or set these as Space secrets:
 | Variable | Default | Purpose |
 |---|---|---|
 | `LLM_BASE_URL` | Groq | any OpenAI-compatible endpoint |
-| `LLM_MODEL` | `llama-3.3-70b-versatile` | check your provider's current model list |
+| `LLM_MODEL` | `openai/gpt-oss-120b` | check your provider's current model list |
 | `LLM_API_KEY` | — | not needed for local Ollama/vLLM |
 | `EMBED_MODEL` | `BAAI/bge-small-en-v1.5` | changing it invalidates any existing index |
 | `DEFAULT_K` | `4` | passages retrieved per question |
@@ -175,7 +175,7 @@ Generation needs an LLM endpoint; Groq's free tier is the default.
 3. Locally: `copy .env.example .env` and set `LLM_API_KEY=gsk_...`.
    On a Space: **Settings → Variables and secrets → New secret**, name
    `LLM_API_KEY`.
-4. If `llama-3.3-70b-versatile` has been retired, pick a current model from
+4. If `openai/gpt-oss-120b` has been retired, pick a current model from
    <https://console.groq.com/docs/models> and set `LLM_MODEL`.
 
 Never commit `.env` — it is already in `.gitignore`.

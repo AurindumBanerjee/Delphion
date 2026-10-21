@@ -19,7 +19,7 @@ class Settings:
     # --- Generation (any OpenAI-compatible endpoint) ---
     # Groq / OpenRouter / Together / Google AI Studio / local Ollama all work.
     llm_base_url: str = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1")
-    llm_model: str = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
+    llm_model: str = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
     llm_api_key: str = os.getenv("LLM_API_KEY", "")
     temperature: float = float(os.getenv("LLM_TEMPERATURE", "0"))
 
