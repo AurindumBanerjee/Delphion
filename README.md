@@ -147,6 +147,39 @@ Caveats, please read before quoting any of this:
   in one day. Re-run with `--questions eval/questions.json --judge` once you have
   the budget.
 
+## Using your own API key
+
+The demo runs on a shared key with a limited free quota. Open **Use your own API key**,
+paste a key for the same provider (Groq by default), and press **Use my key**. The key
+is checked with one tiny request: you see "Key accepted" or "Key rejected", and a
+rejected key leaves the shared key in use.
+
+Privacy: the key is sent to the app's server to make the request and is kept only in
+your browser session, in memory. It is never written to disk, the environment, a cache or
+a log, it is not part of the chat history, and after you set it the app shows at most its
+last 4 characters. **Remove key** forgets it. Use a restricted or throwaway key, and only
+on a Space you trust.
+
+## Usage panel
+
+Under the chat, **Usage** shows how much of the provider's limit is left, for whichever key
+you are using (the panel says which): the shared demo key, which all visitors share, or
+your own. After each answer it updates from the rate-limit headers of that response.
+Groq reports two things, and the panel labels them as such:
+
+- **Requests left today**, a per-day count.
+- **Tokens left this minute**, a per-minute count, with the time until it resets.
+
+The daily *token* limit is not reported by the provider, so no daily token balance is
+shown. **Refresh** makes one tiny request (1 token) to read the limits; for the shared
+key it is limited to once every 30 seconds. If a provider sends no rate-limit headers,
+the panel says "Limit info not available for this provider".
+
+When a limit is hit, the answer area says so ("Daily limit reached, resets in 4 min 47 s",
+or "Per-minute limit reached…") and whose limit it was: the shared demo key's, or your own
+key's. The retrieved passages are still shown, and the provider's error text is never
+displayed.
+
 ## Configuration
 
 Copy `.env.example` to `.env` (locally) or set these as Space secrets:

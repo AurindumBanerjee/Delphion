@@ -12,6 +12,7 @@ import gradio as gr
 from dotenv import load_dotenv
 from loguru import logger
 
+from src import keys, usage
 from src.chunking.chunking_factory import ChunkingFactory
 from src.config import DEFAULT_SYSTEM_PROMPT, settings
 from src.extract_from_pdf import load_and_chunk
@@ -22,6 +23,46 @@ from src.vectorstore import build_vectorstore
 load_dotenv()
 
 METHODS = ChunkingFactory.get_chunking_methods()
+
+
+KEY_WARNING = (
+    "> ⚠️ **No LLM key is configured on this Space.** Retrieval and the passages "
+    "below still work, but answers need the `LLM_API_KEY` secret, or your own key "
+    "under \"Use your own API key\"."
+)
+PRIVACY_NOTE = (
+    "🔒 Your key is sent to this Space's server to make the request and is kept only in "
+    "your session (in memory). It is never saved or logged. Use a restricted or "
+    "throwaway key, and only on a Space you trust."
+)
+REFRESH_NOTE = (
+    "Refresh makes one tiny request (1 token) to read the limits. For the shared key it "
+    f"is limited to once every {usage.REFRESH_CACHE_SECONDS} s."
+)
+
+
+def panel_for(user_key, own_book):
+    """The Usage panel text for whichever key this session is using."""
+    if user_key:
+        return usage.render_panel(True, own_book or usage.UsageBook())
+    return usage.render_panel(False, usage.SHARED.snapshot())
+
+
+def use_key(raw, user_key, own_book):
+    res = keys.set_key(raw, user_key, own_book)
+    # The textbox is always cleared: the key is never shown again, only its last 4 characters.
+    return "", res.key, res.book, res.message, panel_for(res.key, res.book)
+
+
+def drop_key():
+    res = keys.remove_key()
+    return "", None, None, res.message, panel_for(None, None)
+
+
+def do_refresh(user_key, own_book):
+    book, note = keys.refresh(user_key, own_book)
+    panel = panel_for(user_key, book)
+    return (f"{panel}\n\n_{note}_" if note else panel), book
 
 
 def ingest(files, method, size, overlap):
@@ -51,18 +92,25 @@ MODE_LABELS = {
 }
 
 
-def ask(question, history, store, k, system_prompt, mode):
-    """Generator: Gradio re-renders on every yield, so the answer streams in."""
+def ask(question, history, store, k, system_prompt, mode, user_key, own_book):
+    """Generator: Gradio re-renders on every yield, so the answer streams in.
+
+    `user_key` / `own_book` come from this browser session only. The key is passed
+    explicitly to answer_stream; it is never put in settings, env, history or logs."""
     if not question.strip():
-        yield history, "", ""
+        yield history, "", "", panel_for(user_key, own_book), own_book
         return
     history = (history or []) + [
         {"role": "user", "content": question},
         {"role": "assistant", "content": ""},
     ]
-    for partial, sources in answer_stream(store, question, int(k), system_prompt, mode):
+    sink = usage.Sink(own=bool(user_key), book=own_book)
+    for partial, sources in answer_stream(
+        store, question, int(k), system_prompt, mode, api_key=user_key or None, usage=sink
+    ):
         history[-1]["content"] = partial
-        yield history, "", sources
+        book = sink.book if user_key else own_book
+        yield history, "", sources, panel_for(user_key, book), book
 
 
 with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
@@ -72,7 +120,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
         "*Documents are indexed in memory for your session only — nothing is stored.*"
     )
 
+    if not settings.llm_configured:
+        gr.Markdown(KEY_WARNING)
+
     store_state = gr.State(None)
+    user_key_state = gr.State(None)    # this session's own key; never leaves session state
+    own_usage_state = gr.State(None)   # this session's own usage record
 
     with gr.Row():
         with gr.Column(scale=1):
@@ -90,6 +143,15 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
                 label="Retrieval mode",
             )
             status = gr.Markdown("No documents indexed yet.")
+            with gr.Accordion("Use your own API key", open=False):
+                gr.Markdown(PRIVACY_NOTE)
+                key_box = gr.Textbox(
+                    label="API key", type="password", placeholder="Paste your key", max_lines=1
+                )
+                with gr.Row():
+                    use_key_btn = gr.Button("Use my key")
+                    remove_key_btn = gr.Button("Remove key")
+                key_status = gr.Markdown(keys.in_use(None))
             with gr.Accordion("System prompt", open=False):
                 system_prompt = gr.Textbox(
                     value=DEFAULT_SYSTEM_PROMPT, lines=6, show_label=False
@@ -105,6 +167,11 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
                 )
                 send = gr.Button("Ask", variant="primary", scale=1)
             gr.ClearButton([question, chatbot], value="Clear chat")
+            with gr.Accordion("Usage", open=True):
+                usage_md = gr.Markdown(panel_for(None, None))
+                with gr.Row():
+                    refresh_btn = gr.Button("Refresh", size="sm", scale=0)
+                    gr.Markdown(REFRESH_NOTE)
             with gr.Accordion("Retrieved passages", open=True):
                 sources = gr.Markdown("_Sources will appear here._")
 
@@ -119,11 +186,22 @@ with gr.Blocks(theme=gr.themes.Soft(), title="Delphion") as demo:
 
     ask_args = dict(
         fn=ask,
-        inputs=[question, chatbot, store_state, top_k, system_prompt, mode],
-        outputs=[chatbot, question, sources],
+        inputs=[question, chatbot, store_state, top_k, system_prompt, mode,
+                user_key_state, own_usage_state],
+        outputs=[chatbot, question, sources, usage_md, own_usage_state],
     )
     question.submit(**ask_args)
     send.click(**ask_args)
+
+    key_outputs = [key_box, user_key_state, own_usage_state, key_status, usage_md]
+    use_key_args = dict(fn=use_key, inputs=[key_box, user_key_state, own_usage_state],
+                        outputs=key_outputs)
+    use_key_btn.click(**use_key_args)
+    key_box.submit(**use_key_args)
+    remove_key_btn.click(drop_key, None, key_outputs)
+    refresh_btn.click(do_refresh, [user_key_state, own_usage_state], [usage_md, own_usage_state])
+    # A fresh page load shows the current shared reading, not the one from server start.
+    demo.load(lambda: panel_for(None, None), None, usage_md)
 
 
 if __name__ == "__main__":
